@@ -1,0 +1,11 @@
+.messages {
+    padding: 0;
+    overflow: auto;
+    flex: auto;
+  }
+  .container2{
+    margin-left: 5%;
+  }
+  .paragraph{
+    margin-left: 0%;
+  }
