@@ -3,6 +3,7 @@ import "./chatContent.css";
 import Avatar from "../chatList/Avatar";
 import ChatItem from "./ChatItem";
 import axios from 'axios'
+const url = process.env.REACT_APP_BASE_URL
 const ChatContent = (props) => {
   console.log(props)
   const messagesEndRef = useRef(null)
@@ -78,7 +79,11 @@ const ChatContent = (props) => {
   useEffect(() => {
     setIsOnline("")
     axios({
+<<<<<<< HEAD
       url: `${process.env.REACT_APP_BASE_URL}/api/getuserbyid/` + `${props.user.email}`,
+=======
+      url: `${url}/api/getuserbyid/` + `${props.user.email}`,
+>>>>>>> 0417bed9c97385d256dbc4bad3df1f85e150ec48
       method: "GET",
     })
       .then((res) => {

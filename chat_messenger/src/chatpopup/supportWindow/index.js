@@ -22,11 +22,7 @@ const SupportWindow = (props) => {
     const params = { chatname: data.name, room: data.email };
     const navigate = useNavigate()
     const navigateToChat = () => {
-        localStorage.removeItem('socketid');
-        //   navigate({
-        //     pathname: '/chat',
-        //     search: `?${createSearchParams(params)}`,
-        //   });
+        localStorage.setItem('room',JSON.stringify({name:data.name,room:data.email}))
         var d = new Date();
         axios({
             url: `${url}/api/create`,

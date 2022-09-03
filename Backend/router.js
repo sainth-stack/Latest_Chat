@@ -165,28 +165,35 @@ router.put('/updateStatus', async (req, res) => {
 
 router.put('/updateSeen', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
-  // const final=user.message.filter((item)=>item.seen === true)
+  const final=user[0].message.map((item)=>{
+    if(item.seen === false && item.msgid === req.body.email){
+    return{
+      ...item,seen:true
+    }
+    }
+    else {
+      return item
+    }
+  })
   try {
-    // userModel.updateOne(
-    //   { email: req.body.email },
-    //   {
-    //     $set: {
-    //       status: req.body.status
-    //     }
-    //   },
-    //   function (err, result) {
-    //     if (err) {
-    //       res.send(error)
-    //       console.log(error)
-    //     }
-    //     else {
-    //       res.send(result)
-    //       console.log('update')
-    //     }
-    //   }
-    // );
-    res.send(user)
-
+    userModel.updateOne(
+      { email: req.body.email },
+      {
+        $set: {
+          message: final
+        }
+      },
+      function (err, result) {
+        if (err) {
+          res.send(error)
+          console.log(error)
+        }
+        else {
+          res.send(result)
+          console.log('update')
+        }
+      }
+    );
   } catch (err) {
     res.status(500).send(
       "Failed"
