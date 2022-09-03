@@ -3,6 +3,7 @@ import "./chatContent.css";
 import Avatar from "../chatList/Avatar";
 import ChatItem from "./ChatItem";
 import axios from 'axios'
+const url = process.env.REACT_APP_BASE_URL
 const ChatContent = (props) => {
   console.log(props)
   const messagesEndRef = useRef(null)
@@ -78,7 +79,7 @@ const ChatContent = (props) => {
   useEffect(() => {
     setIsOnline("")
     axios({
-      url: "https://chat-messengers.herokuapp.com/api/getuserbyid/" + `${props.user.email}`,
+      url: `${url}/api/getuserbyid/` + `${props.user.email}`,
       method: "GET",
     })
       .then((res) => {

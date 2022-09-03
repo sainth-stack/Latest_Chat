@@ -7,6 +7,7 @@ import SupportWindow from './chatpopup/supportWindow';
 import Chat from './components/Chat/Chat';
 function Popup() {
   const [visible, setVisible] = useState(false)
+  const roomid = JSON.parse(localStorage.getItem("room"))
   const [data, setData] = useState({
     name: '',
     room: ''
@@ -20,19 +21,26 @@ function Popup() {
     }
   }
   const close = () => {
-    if (data.name === "") {
-      setVisible(!visible)
+    if (!roomid) {
+      if (data.name === "") {
+        setVisible(!visible)
+      }
+      if (data.name !== "") {
+        setVisible(false)
+        setChat(!chat)
+      }
     }
-    if(data.name !== ""){
+    else {
       setVisible(false)
       setChat(!chat)
+      setData(roomid)
     }
   }
   return (
     <div className="">
       <SupportWindow visible={visible} handlecallback={handleCallback} />
       <Chat visible={chat} data={data} />
-      <Avatar onClick={() => close()} visible={visible} chat={chat}/>
+      <Avatar onClick={() => close()} visible={visible} chat={chat} />
     </div>
   );
 }
