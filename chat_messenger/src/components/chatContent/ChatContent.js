@@ -78,7 +78,7 @@ const ChatContent = (props) => {
   useEffect(() => {
     setIsOnline("")
     axios({
-      url: "https://chat-messengers.herokuapp.com/api/getuserbyid/" + `${props.user.email}`,
+      url: `${process.env.REACT_APP_BASE_URL}/api/getuserbyid/` + `${props.user.email}`,
       method: "GET",
     })
       .then((res) => {
