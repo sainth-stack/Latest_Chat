@@ -9,20 +9,24 @@ export default class ChatItem extends Component {
     super(props);
   }
   render() {
+    let msg=this.props.msg !== null ? this.props.msg.split("\n") : '';
+    const  msg1=msg.map((item)=>{
+      return <p className="p-0 m-0">{item} <br /></p>
+    })
     return (
       <div
         style={{ animationDelay: `0.8s` }}
         className={`chat__item ${this.props.user ? this.props.user : ""}`}
       >
         <div className="chat__item__content">
-          <div className="chat__msg">{this.props.msg}</div>
+          <div className="chat__msg">{msg1}</div>
           <div className="chat__meta">
             <span>{moment(this.props.date).fromNow()}</span>
-            <img src={this.props.user !=='other' ? (this.props.seen ? blueticks : greyticks ) : ''} />
+            <img src={this.props.user !== 'other' ? (this.props.userIn ? blueticks : (this.props.seen ? blueticks : greyticks)) : ''} />
             {/* <span>Seen 1.03PM</span> */}
           </div>
         </div>
-        <Avatar isOnline={this.props.user !== 'other' ? 'active' : this.props.isOnline} image={this.props.image} />
+        <Avatar isOnline={this.props.user !== 'other' ? 'Online' : this.props.isOnline} image={this.props.image} />
       </div>
     );
   }

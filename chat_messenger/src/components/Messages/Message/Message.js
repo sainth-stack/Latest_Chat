@@ -4,48 +4,35 @@ import './Message.css';
 import greyIcon from './greyticks.png'
 import blueIcon from './blueticks.png'
 import ReactEmoji from 'react-emoji';
-
-const Message = ({ message: { text, user, seen }, name, room,allseen }) => {
+import moment from 'moment'
+const Message = ({ message: { message, user, seen, type, date }, name, room, allseen }) => {
+  const myArray = message.split("\n");
+  const msg1 = myArray.map((item) => {
+    return <p className='p-0 m-0'>{item} <br /></p>
+  })
   let isSentByCurrentUser = false;
-
-  const trimmedName = name.trim();
-
-  if (user === trimmedName) {
+  if (type === 'other') {
     isSentByCurrentUser = true;
-  }
-  let msgcontains = text.includes('has joined!') || text.includes('has left')
-  let left = text.includes('has left')
-  if (left && user !== 'admin') {
-    axios({
-      url: "http://localhost:5000/api/updateStatus",
-      method: "PUT",
-      data: { email: room, status: 'Offline' },
-    })
-      .then((res) => {
-        console.log('success', res)
-      })
-
-      .catch((err) => {
-        console.log('failed', err)
-      });
   }
   return (
     isSentByCurrentUser
       ? (
-        <div className="messageContainer justifyEnd mt-2">
-          {/* <p className="sentText pr-10">{trimmedName}</p> */}
-          <div className="messageBox backgroundBlue d-flex ">
-            <p className="messageText colorWhite " style={{width:'90%'}}>{ReactEmoji.emojify(text)}</p>
-            <img className="align-self-end" src={ allseen ? blueIcon : (seen ? blueIcon:greyIcon)} style={{width:'20px',height:'20px',marginLeft:'3%'}}/>        
-             </div>
+        <div className="messageContainer justifyEnd mt-2 mb-2">
+          <div className="messageBox backgroundBlue p-0 d-flex flex-column">
+            <p className="messageText colorWhite p-0 m-0 pl-2 w-70" style={{ width: '80%' }}>{msg1}</p>
+            <div className='d-flex justify-content-between w-70'>
+              <p className='date1 p-0 m-0 pl-2'>{moment(date).fromNow()}</p>
+              <img className="" src={allseen ? blueIcon : (seen ? blueIcon : greyIcon)} style={{ width: '20px', height: '20px' }} />
+            </div>
+          </div>
         </div>
       )
       : (
-        <div className={msgcontains ? "centerlines mt-2 mb-2" : "messageContainer justifyStart mt-2 mb-2"}>
-          <div className={msgcontains ? "messageBox4 " : "messageBox backgroundLight"}>
-            <p className={msgcontains ? "messageText2" : "messageText colorDark"}>{text}</p>
+        <div className="messageContainer justifyStart mt-1 mb-1">
+          <div className="messageBox backgroundLight p-0 d-flex flex-column">
+            <p className="messageText colorDark p-0 m-0 pl-2 w-80">{msg1}</p>
+            <p className='date2 p-0 m-0 pl-2 w-70'>{moment(date).fromNow()}</p>
           </div>
-          {/* <p className="sentText pl-10 ">{user}</p> */}
         </div>
       )
   );

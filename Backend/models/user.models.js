@@ -17,9 +17,13 @@ const Schema = new mongoose.Schema({
     type: String,
     required: false
   },
-  message: {
+  unseenMessage: {
     type: Array,
     required: false
+  },
+  seenMessage:{
+    type:Array,
+    required:false
   },
   status: {
     type: String,

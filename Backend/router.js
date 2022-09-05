@@ -13,13 +13,14 @@ router.post('/create', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
   if (user.length < 1) {
     try {
-      const message=`Name:${req.body.name}` + " " + `Email:${req.body.email}` + " " +`Type:${req.body.type}` + " " + `Message:${req.body.message}`
+      const message=`Name:${req.body.name}`+'\n' + `Email:${req.body.email}`+'\n' +`Type:${req.body.type}` +'\n' + `Message:${req.body.message}`
       let requestBody = {
         name: req.body.name,
         email: req.body.email,
         type: req.body.type,
         socketid: req.body.socketid,
-        message: { message: message, msgid: req.body.email, type: 'other',date:req.body.date,seen:req.body.seen }
+        unseenMessage: { message: message, msgid: req.body.email, type: 'other',date:req.body.date,seen:req.body.seen },
+        seenMessage:{}
       }
       const newCompany = new userModel(requestBody);
       await newCompany.save();
@@ -53,7 +54,6 @@ router.post('/create', async (req, res) => {
             if (err) throw err;
             else {
               res.send(result)
-              console.log('update')
             }
           }
         );
@@ -102,24 +102,23 @@ router.get('/getuserbyid/:id', async (req, res) => {
 })
 router.put('/update', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
-  let msg = user[0].message
+  let msg = user[0].unseenMessage
   msg.push({ message: req.body.message, type: req.body.type, msgid: req.body.msgId ? req.body.msgId : req.body.email,date:req.body.date,seen:req.body.seen })
   try {
     userModel.updateOne(
       { email: req.body.email },
       {
         $set: {
-          message: msg
+          unseenMessage: msg
         }
       },
       function (err, result) {
         if (err) {
-          res.send(error)
-          console.log(error)
+          res.send(err)
+          console.log(err)
         }
         else {
           res.send(result)
-          console.log('update')
         }
       }
     );
@@ -144,8 +143,8 @@ router.put('/updateStatus', async (req, res) => {
       },
       function (err, result) {
         if (err) {
-          res.send(error)
-          console.log(error)
+          res.send(err)
+          console.log(err)
         }
         else {
           res.send(result)
@@ -165,8 +164,8 @@ router.put('/updateStatus', async (req, res) => {
 
 router.put('/updateSeen', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
-  const final=user[0].message.map((item)=>{
-    if(item.seen === false && item.msgid === req.body.email){
+  const final=user[0].unseenMessage.map((item)=>{
+    if(item.seen === false && item.msgid === req.body.msgId ? req.body.msgId : req.body.email){
     return{
       ...item,seen:true
     }
@@ -180,17 +179,16 @@ router.put('/updateSeen', async (req, res) => {
       { email: req.body.email },
       {
         $set: {
-          message: final
+          unseenMessage: final
         }
       },
       function (err, result) {
         if (err) {
-          res.send(error)
-          console.log(error)
+          res.send(err)
+          console.log(err)
         }
         else {
           res.send(result)
-          console.log('update')
         }
       }
     );

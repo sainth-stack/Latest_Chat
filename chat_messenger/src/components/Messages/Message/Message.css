@@ -15,6 +15,15 @@
   font-size: 13px;
   word-wrap: break-word;
 }
+.date1{
+  color:green;
+  font-size: 10px !important;
+}
+.date2{
+  width:90%;
+  color:azure;
+  font-size: 10px !important;
+}
 
 .messageText img {
   vertical-align: middle;

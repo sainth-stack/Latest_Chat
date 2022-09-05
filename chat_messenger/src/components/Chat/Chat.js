@@ -10,7 +10,6 @@ import axios from 'axios'
 const url = process.env.REACT_APP_BASE_URL
 const socket = io(url)
 const Chat = (props) => {
-    console.log(props)
     const [message, setMessage] = useState('')
     const [messages, setMessages] = useState([])
     const [allSeen, setAllSeen] = useState(false)
@@ -22,17 +21,17 @@ const Chat = (props) => {
     useEffect(() => {
         if (props.visible) {
             socket.emit('join', { name, room, msg, type }, () => { })
-            // return () => {
-            //     socket.emit('disconnect')
-            // }
+            return () => {
+                props.socket.emit('leave', room, () => { })
+            }
         }
     }, [name])
-    const updateSeen = () => {
+    const updateSeen = async () => {
         const finalData = messages.map((item) => {
             return { ...item, seen: true }
         })
         setMessages(finalData)
-        axios({
+       await axios({
             url: `${url}/api/updateSeen`,
             method: "PUT",
             data: { name: name, email: room, seen: true },
@@ -45,20 +44,22 @@ const Chat = (props) => {
             });
     }
     useEffect(() => {
-        const roomid=JSON.parse(localStorage.getItem('room'))
+        const roomid = JSON.parse(localStorage.getItem('room'))
         if (roomid) {
             axios({
                 url: `${url}/api/getuserbyid/` + `${roomid.room}`,
                 method: "GET",
             })
                 .then((res) => {
-                    console.log('success', res.data.data[0].message)
-                    let updateData = res.data.data[0].message.map((item)=>{
-                        return{
-                            ...item,text:item.message,user:item.type == 'other' ? res.data.data[0].name :'admin'
+                    console.log('success', res.data.data[0].unseenMessage)
+                    let fin = [...res.data.data[0].unseenMessage, ...res.data.data[0].seenMessage]
+                    let updateData = fin.filter((item) => {
+                        if (!(Object.keys(item).length === 0)) {
+                            return {
+                                ...item, message: item.message
+                            }
                         }
                     })
-                    console.log(updateData)
                     setMessages(updateData)
                     // scrollToBottom()
                 })
@@ -71,12 +72,18 @@ const Chat = (props) => {
     useEffect(() => {
         if (props.visible) {
             socket.on('message', (message) => {
-                console.log(message)
                 setMessages([...messages, message])
+                if (message.user === "admin" && message.msgid !== null) {
+                    setAdminIn(true)
+                    // updateSeen()
+                }
             })
-            socket.on('changeToSeen', (message) => {
-                setAdminIn(true)
-                updateSeen()
+            socket.on('joinl', (message) => {
+                console.log(message,room)
+                if (message.email === room) {
+                    setAdminIn(true)
+                    updateSeen()
+                }
             })
             socket.on('end', (message) => {
                 console.log("admon Exit")
@@ -90,7 +97,7 @@ const Chat = (props) => {
         event.preventDefault();
         if (message) {
             var d = new Date();
-            socket.emit('sendMessage', message, name, room, d, adminIn ? true : false, () => setMessage(''));
+            socket.emit('sendMessage', message, name, room, d, adminIn ? true : false, "other", () => setMessage(''));
             axios({
                 url: `${url}/api/update`,
                 method: "PUT",
