@@ -64,7 +64,7 @@ const ChatList = (props) => {
     props.handlecallback({ ...childData, message: childData.data.seenMessage ? [...childData.data.seenMessage, ...childData.data.unseenMessage] : null })
   }
   return (
-    <div className="main__chatlist">
+    <div className="main__chatlist col-sm-3">
       <div className="chatlist__heading">
         <h2>Chats</h2>
         <button className="btn-nobg">

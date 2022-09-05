@@ -13,13 +13,14 @@ app.use(bodyParser.json())
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./users.js')
 io.on('connection', function (socket) {
   socket.on('join', ({ name, room, msg, type, userType }, callback) => {
+    console.log({name, room, msg, type, userType})
     const id = socket.id
     const { user } = addUser({ name, room, msg, id, type, userType })
     socket.join(user.room);
     const users = getUser(room, name);
     socket.broadcast.emit('usersall', { user,users:users })
     if (user.name !== 'admin') {
-      socket.emit('message', { user: `${user.name}`, seen: false, message: `Name:${user.name + "\n"}    Email:${user.room + "\n"}   Type:${user.type + '\n'}   Message:${user.msg + "\n"}`, msgid: `${user.room}`, type: 'other' }); setTimeout(function () {
+      socket.emit('message', { user: `${user.name}`, seen: false, message: `Name:${user.name + "\n"}Email:${user.room + "\n"}Type:${user.type + '\n'}Message:${user.msg}`, msgid: `${user.room}`, type: 'other' }); setTimeout(function () {
         socket.emit('message', { user: 'admin', message: `Thank you for contacting us. Our agent will respond in a min.`, msgid: null });
       }, 2000);
     }
