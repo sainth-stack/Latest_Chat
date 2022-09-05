@@ -81,7 +81,7 @@ const ChatContent = (props) => {
   }
   const image = "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU";
   return (
-    <div className="main__chatcontent">
+    <div className="main__chatcontent col-sm-9">
       <div className="content__header">
         <div className="blocks">
           <div className="current-chatting-user">
