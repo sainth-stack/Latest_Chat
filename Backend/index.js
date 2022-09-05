@@ -19,9 +19,9 @@ io.on('connection', function (socket) {
     socket.join(user.room);
     socket.broadcast.emit('usersall', { user })
     if (user.name !== 'admin') {
-      socket.emit('message', { user: `${user.name}`, seen:false,text: `Name:${user.name}    Email:${user.room}   Type:${user.type}   Message:${user.msg}`, msgid: `${user.room}` });
+      socket.emit('message', { user: `${user.name}`, seen:false,text: `Name:${user.name+"\n"}Email:${user.room+"\n"}Type:${user.type+"\n"}Message:${user.msg}`, msgid: `${user.room}` });
       setTimeout(function () {
-        socket.emit('message', { user: 'admin', text: `Thank you for conatcting us. Our agent will respond in a min.`, msgid: `${user.room}` });
+        socket.emit('message', { user: 'admin', text: `Thank you for contacting us. Our agent will respond in a min.`, msgid: `${user.room}` });
       }, 2000);
     }
     socket.broadcast.to(user.room).emit('changeToSeen', { user: 'admin', seen:true ,room:user.room});
