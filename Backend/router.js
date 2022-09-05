@@ -2,7 +2,7 @@ const { request } = require('express');
 const express = require('express')
 const router = express.Router();
 const userModel = require('./models/user.models')
-
+const msgModel = require('./models/messages.model')
 const successResponse = ({ message, data }) => ({ success: true, data: data ? data : null, message });
 const failResponse = ({ message, data }) => ({ success: false, data: data ? data : null, message });
 
@@ -13,14 +13,11 @@ router.post('/create', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
   if (user.length < 1) {
     try {
-      const message=`Name:${req.body.name}`+'\n' + `Email:${req.body.email}`+'\n' +`Type:${req.body.type}` +'\n' + `Message:${req.body.message}`
       let requestBody = {
         name: req.body.name,
         email: req.body.email,
         type: req.body.type,
         socketid: req.body.socketid,
-        unseenMessage: { message: message, msgid: req.body.email, type: 'other',date:req.body.date,seen:req.body.seen },
-        seenMessage:{}
       }
       const newCompany = new userModel(requestBody);
       await newCompany.save();
@@ -83,53 +80,40 @@ router.get('/getusers', async (req, res) => {
     );
   }
 })
-router.get('/getuserbyid/:id', async (req, res) => {
+router.get('/getuserbyid/:id/:pagesize/:page', async (req, res) => {
   try {
-    const users = await userModel.find({ email: req.params.id });
+    const msgs = await msgModel.find({ msgid: req.params.id }).limit(req.params.pagesize).sort({ createdAt:-1 }).skip(req.params.page * req.params.pagesize);
     res.status(200).send(
       successResponse({
-        message: 'Users Retrieved Successfully!',
-        data: users
+        message: 'msg Retrieved Successfully!',
+        data: msgs
       })
     )
   } catch (err) {
     res.status(500).send(
       failResponse({
-        message: err ? err.message : "Users Not Fetched!"
+        message: err ? err.message : "msg Not Fetched!"
       })
     );
   }
 })
-router.put('/update', async (req, res) => {
-  const user = await userModel.find({ email: req.body.email });
-  let msg = user[0].unseenMessage
-  msg.push({ message: req.body.message, type: req.body.type, msgid: req.body.msgId ? req.body.msgId : req.body.email,date:req.body.date,seen:req.body.seen })
+router.post('/createmsg', async (req, res) => {
   try {
-    userModel.updateOne(
-      { email: req.body.email },
-      {
-        $set: {
-          unseenMessage: msg
-        }
-      },
-      function (err, result) {
-        if (err) {
-          res.send(err)
-          console.log(err)
-        }
-        else {
-          res.send(result)
-        }
-      }
+    let requestBody = { message: req.body.message, msgid: req.body.msgid, type: req.body.type, date: req.body.date, seen: req.body.seen, from: req.body.from, to: req.body.to }
+    const newCompany = new msgModel(requestBody);
+    await newCompany.save();
+    res.status(200).send(
+      successResponse({
+        message: 'msg Created Successfully!',
+      })
     );
-
   } catch (err) {
     res.status(500).send(
-      "Failed"
+      failResponse({
+        message: err ? err.message : "msg Not Created!"
+      })
     );
   }
-
-
 })
 
 router.put('/updateStatus', async (req, res) => {
@@ -164,11 +148,11 @@ router.put('/updateStatus', async (req, res) => {
 
 router.put('/updateSeen', async (req, res) => {
   const user = await userModel.find({ email: req.body.email });
-  const final=user[0].unseenMessage.map((item)=>{
-    if(item.seen === false && item.msgid === req.body.msgId ? req.body.msgId : req.body.email){
-    return{
-      ...item,seen:true
-    }
+  const final = user[0].unseenMessage.map((item) => {
+    if (item.seen === false && item.msgid === req.body.msgId ? req.body.msgId : req.body.email) {
+      return {
+        ...item, seen: true
+      }
     }
     else {
       return item

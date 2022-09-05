@@ -18,6 +18,33 @@ const Chat = (props) => {
     const room = props.data.email ? props.data.email : props.data.room
     const msg = props.data.message
     const type = props.data.type
+
+    useEffect(() => {
+        const roomid = JSON.parse(localStorage.getItem('room'))
+        if (roomid) {
+            axios({
+                url: `${url}/api/getuserbyid/` + `${roomid.room}`,
+                method: "GET",
+            })
+                .then((res) => {
+                    console.log('success', res.data)
+                    // let updateData = res.data.filter((item) => {
+                    //     if (!(Object.keys(item).length === 0)) {
+                    //         return {
+                    //             ...item, message: item.message
+                    //         }
+                    //     }
+                    // })
+                    console.log(res.data.data)
+                    setMessages(res.data.data)
+                    // scrollToBottom()
+                })
+                .catch((err) => {
+                    console.log('failed', err)
+                });
+        }
+    },[])
+
     useEffect(() => {
         if (props.visible) {
             socket.emit('join', { name, room, msg, type }, () => { })
@@ -43,32 +70,6 @@ const Chat = (props) => {
                 console.log('failed', err)
             });
     }
-    useEffect(() => {
-        const roomid = JSON.parse(localStorage.getItem('room'))
-        if (roomid) {
-            axios({
-                url: `${url}/api/getuserbyid/` + `${roomid.room}`,
-                method: "GET",
-            })
-                .then((res) => {
-                    console.log('success', res.data.data[0].unseenMessage)
-                    let fin = [...res.data.data[0].unseenMessage, ...res.data.data[0].seenMessage]
-                    let updateData = fin.filter((item) => {
-                        if (!(Object.keys(item).length === 0)) {
-                            return {
-                                ...item, message: item.message
-                            }
-                        }
-                    })
-                    setMessages(updateData)
-                    // scrollToBottom()
-                })
-                .catch((err) => {
-                    console.log('failed', err)
-                });
-        }
-    }, [room])
-
     useEffect(() => {
         if (props.visible) {
             socket.on('message', (message) => {
@@ -99,9 +100,10 @@ const Chat = (props) => {
             var d = new Date();
             socket.emit('sendMessage', message, name, room, d, adminIn ? true : false, "other", () => setMessage(''));
             axios({
-                url: `${url}/api/update`,
-                method: "PUT",
-                data: { name: name, email: room, socketid: room, type: 'other', date: d, message: message, seen: false },
+                url: `${url}/api/createmsg`,
+                method: "POST",
+                data: {name:name,message:message, msgid:room, type: "other", date: d, seen: false,from:room,to:'admin@gmail.com' },
+
             })
                 .then((res) => {
                     console.log('success', res)

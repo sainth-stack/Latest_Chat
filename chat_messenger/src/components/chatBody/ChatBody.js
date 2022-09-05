@@ -63,9 +63,9 @@ const ChatBody = () => {
       var d = new Date();
       socket.emit('sendMessage', message, name, room, d, false, "me", () => setMessage(''));
       axios({
-        url: `${url}/api/update`,
-        method: "PUT",
-        data: { name: name, email: room, date: d, type: '', message: message, seen: false, msgId: 'admin@gmail.com' },
+        url: `${url}/api/createmsg`,
+        method: "POST",
+        data: {name:name,message:message, msgid:room, type: "", date: d, seen: false,from:"admin@gmail.com",to:room},
       })
         .then((res) => {
         })

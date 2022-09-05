@@ -5,7 +5,7 @@ import Select from "react-select";
 import './styles.css'
 import { Navigate, useNavigate, createSearchParams } from 'react-router-dom'
 var d = new Date();
-const url=process.env.REACT_APP_BASE_URL
+const url = process.env.REACT_APP_BASE_URL
 const SupportWindow = (props) => {
     const [data, setData] = useState({
         name: '',
@@ -21,13 +21,24 @@ const SupportWindow = (props) => {
     };
     const params = { chatname: data.name, room: data.email };
     const navigate = useNavigate()
-    const navigateToChat = () => {
-        localStorage.setItem('room',JSON.stringify({name:data.name,room:data.email}))
+    const navigateToChat = async () => {
+        localStorage.setItem('room', JSON.stringify({ name: data.name, room: data.email }))
         var d = new Date();
-        axios({
+       await axios({
             url: `${url}/api/create`,
             method: "POST",
-            data: { name: data.name, email: data.email, socketid: data.email,type: data.type ,message:data.message,date:d,seen:false},
+            data: { name: data.name, email: data.email, socketid: data.email, type: data.type, date: d, seen: false },
+        })
+            .then((res) => {
+                console.log('success', res)
+            })
+            .catch((err) => {
+                console.log('failed', err)
+            });
+       await axios({
+            url: `${url}/api/createmsg`,
+            method: "POST",
+            data: {name: data.name,message:`Name:${data.name + "\n"}    Email:${data.email + "\n"}   Type:${data.type + '\n'}   Message:${data.message + "\n"}`, msgid: data.email, type: "other", date: d, seen: false,from:data.email,to:'admin@gmail.com' },
         })
             .then((res) => {
                 console.log('success', res)
@@ -85,7 +96,7 @@ const SupportWindow = (props) => {
             <div className="text-center mt-4" style={{ backgroundColor: 'white', height: '390px' }}>
                 <input
                     required
-                    style={{height:'40px'}}
+                    style={{ height: '40px' }}
                     type="text"
                     className='input-box mt-3'
                     placeholder="Name"
@@ -95,7 +106,7 @@ const SupportWindow = (props) => {
                 />
                 <input
                     required
-                    style={{height:'40px'}}
+                    style={{ height: '40px' }}
                     type="text"
                     className="input-box mt-2"
                     placeholder="Email"
@@ -105,7 +116,7 @@ const SupportWindow = (props) => {
                 />
                 <select
                     placeholder="Select"
-                    style={{height:'40px'}}
+                    style={{ height: '40px' }}
                     value={updatedOptions.filter(function (option) {
                         return option === data.type;
                     })}
