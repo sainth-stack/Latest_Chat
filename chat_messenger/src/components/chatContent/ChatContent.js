@@ -5,87 +5,62 @@ import ChatItem from "./ChatItem";
 import axios from 'axios'
 const url = process.env.REACT_APP_BASE_URL
 const ChatContent = (props) => {
-  console.log(props)
   const messagesEndRef = useRef(null)
   const [message1, setMessage1] = useState('')
   const img = "https://pbs.twimg.com/profile_images/1055263632861343745/vIqzOHXj.jpg"
-  // const chatItms = [
-  //   {
-  //     key: 1,
-  //     image:
-  //       "https://huber.ghostpool.com/wp-content/uploads/avatars/3/596dfc2058143-bpfull.png",
-  //     type: "",
-  //     msg: "Hi Tim, How are you?",
-  //   },
-  //   {
-  //     key: 2,
-  //     image:
-  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU",
-  //     type: "other",
-  //     msg: "I am fine.",
-  //   },
-  //   {
-  //     key: 3,
-  //     image:
-  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU",
-  //     type: "other",
-  //     msg: "What about you?",
-  //   },
-  //   {
-  //     key: 4,
-  //     image:
-  //       "https://pbs.twimg.com/profile_images/1116431270697766912/-NfnQHvh_400x400.jpg",
-  //     type: "",
-  //     msg: "Awesome these days.",
-  //   },
-  //   {
-  //     key: 5,
-  //     image:
-  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU",
-  //     type: "other",
-  //     msg: "Finally. What's the plan?",
-  //   },
-  //   {
-  //     key: 6,
-  //     image:
-  //       "https://pbs.twimg.com/profile_images/1116431270697766912/-NfnQHvh_400x400.jpg",
-  //     type: "",
-  //     msg: "what plan mate?",
-  //   },
-  //   {
-  //     key: 7,
-  //     image:
-  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU",
-  //     type: "other",
-  //     msg: "I'm taliking about the tutorial",
-  //   },
-  // ];
   const [data, setData] = useState([])
   const [myMessage, setMyMessage] = useState(false)
-  const [isOnline2, setIsOnline] = useState("")
+  const [isOnline2, setIsOnline] = useState(props.user.isOnline)
+  const [userIn, setUserIn] = useState(false)
   const scrollToBottom = () => {
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
   }
   useEffect(() => {
     props.socket.on('message', (message) => {
-      const updateData = [...data, { message: message.text, type: myMessage ? '' : 'other', msgid: 'hello', date: message.date,seen:message.seen }]
+      const updateData = [...data, { message: message.message, type: myMessage ? '' : 'other', msgid: 'hello', date: message.date, seen: message.seen }]
       setData(updateData)
       setMyMessage(false)
+      console.log(props.user.email, message.msgid)
+      if (props.user.email == message.email) {
+        setIsOnline('Online')
+        // changeSeen()
+      }
       scrollToBottom()
-
     })
   }, [data, myMessage])
+  const changeSeen = async() => {
+     const data1 = data.map((item) => {
+      return {
+        ...item, seen: true
+      }
+    })
+    setData(data1)
+  }
+  useEffect(() => {
+    if (!(Object.keys(props.userLeft).length === 0) && props.userLeft.email == props.user.email) {
+      setIsOnline('Offline')
+      setUserIn(false)
+    }
+  }, [props.userLeft])
+  useEffect(() => {
+    if (!(Object.keys(props.userJoin).length === 0) && props.userJoin.email == props.user.email) {
+      setIsOnline('Online')
+    }
+  }, [props.userJoin])
+  useEffect(() => {
+    if (!(Object.keys(props.userJoin).length === 0) && props.userJoin.email === props.user.email) {
+      setUserIn(true)
+      changeSeen()
+    }
+  }, [props.userJoin])
 
   useEffect(() => {
-    setIsOnline("")
     axios({
       url: `${url}/api/getuserbyid/` + `${props.user.email}`,
       method: "GET",
     })
       .then((res) => {
-        console.log('success', res.data.data[0].message)
-        let updateData = [...res.data.data[0].message]
-        console.log(updateData)
+        let updateData = [...res.data.data[0].unseenMessage]
         setData(updateData)
         scrollToBottom()
       })
@@ -94,21 +69,12 @@ const ChatContent = (props) => {
       });
   }, [props.user])
 
-  useEffect(() => {
-    if (!(Object.keys(props.userLeft).length === 0)) {
-      console.log("userLeft")
-      setIsOnline("Offline")
-    }
-  }, [props.userLeft])
-
   const sendMessage = (e) => {
-    // const updateData = { message: message1, type: '', msgid: `${props.user.room}`
     setMyMessage(true)
     props.sendMessage(e)
     scrollToBottom()
   }
   useEffect(scrollToBottom);
-console.log(messagesEndRef)
   const onChangeMessage = (e) => {
     props.setMessage(e.target.value)
     setMessage1(e.target.value)
@@ -120,7 +86,7 @@ console.log(messagesEndRef)
         <div className="blocks">
           <div className="current-chatting-user">
             <Avatar
-              isOnline={isOnline2 ? isOnline2 : props.user.isOnline}
+              isOnline={isOnline2}
               image={image}
             />
             <p>{props.user.name}</p>
@@ -144,11 +110,12 @@ console.log(messagesEndRef)
                 user={itm.type ? itm.type : "me"}
                 msg={itm.message}
                 image={itm.type ? image : image}
-                isOnline={isOnline2 ? isOnline2 : props.user.isOnline}
+                isOnline={isOnline2}
                 name={props.user.name}
                 email={props.user.email}
                 date={itm.date !== undefined ? itm.date : itm.createdAt}
                 seen={itm.seen}
+                userIn={userIn}
               />
             );
           })}

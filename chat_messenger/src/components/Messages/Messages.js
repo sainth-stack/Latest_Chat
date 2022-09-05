@@ -6,7 +6,7 @@ import Message from './Message/Message';
 
 import './Messages.css';
 
-const Messages = ({ messages, name ,room,allseen}) => (
+const Messages = ({ messages, name ,room,allseen,date}) => (
   <ScrollToBottom className="messages">
     <div className="container" style={{ backgroundColor: '#F67280', height: '80px', alignItems: 'center' }}>
       <div className="text-center container2" >
@@ -16,7 +16,7 @@ const Messages = ({ messages, name ,room,allseen}) => (
 
       </div>
     </div>
-    {messages.map((message, i) => <div key={i}><Message message={message} name={name} room={room} allseen={allseen}/></div>)}
+    {messages.map((message, i) => <div key={i}><Message message={message} name={name} room={room} allseen={allseen} date={date}/></div>)}
   </ScrollToBottom>
 );
 

@@ -3,7 +3,6 @@ import "./chatList.css";
 import ChatListItems from "./ChatListItems";
 import axios from 'axios'
 const url = process.env.REACT_APP_BASE_URL
-console.log(url)
 const ChatList = (props) => {
 
   const img = "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU"
@@ -12,37 +11,11 @@ const ChatList = (props) => {
 
   useEffect(() => {
     if (!(Object.keys(props.newUser).length === 0)) {
-      const finalUsers = users.filter((user) => user.room !== props.newUser.user.room)
-      const updateUsers = [props.newUser.user, ...finalUsers]
+      const finalUsers = users.filter((user) => user.email !== props.newUser.user.room)
+      const updateUsers = [{ ...props.newUser.user, email: props.newUser.user.room }, ...finalUsers]
       setUsers(updateUsers)
     }
   }, [props.newUser])
-
-  useEffect(() => {
-    if (!(Object.keys(props.userLeft).length === 0)) {
-      const finalUsers = users.map((user) => {
-        if (user.room === props.userLeft.email) {
-          const data = { ...user, status: 'Offline' }
-          let final = {
-            name: data.name,
-            active: '',
-            email: data.room,
-            isOnline: '',
-            animationDelay: 1,
-            image: img
-          }
-          props.handlecallback(final)
-          return {
-            ...data
-          }
-        }
-        else {
-          return user
-        }
-      })
-      setUsers(finalUsers)
-    }
-  }, [props.userLeft])
 
   useEffect(() => {
     axios({
@@ -58,13 +31,37 @@ const ChatList = (props) => {
         console.log('failed', err)
       });
   }, [])
+  useEffect(() => {
+    const finalData = users.map((item) => {
+      if (item.email === props.userLeft.email) {
+        return {
+          ...item, status: "Offline"
+        }
+      }
+      else {
+        return item
+      }
+    })
+    setUsers(finalData)
+  }, [props.userLeft])
+  useEffect(() => {
+    const finalData = users.map((item) => {
+      if (item.email === props.userLeft.email) {
+        return {
+          ...item, status: "Online"
+        }
+      }
+      else {
+        return item
+      }
+    })
+    setUsers(finalData)
+  }, [props.userJoin])
   const handleCallback = (childData) => {
-    if ( !(Object.keys(props.user).length === 0)) {
-      console.log(props.user)
-      console.log('leave')
+    if (!(Object.keys(props.user).length === 0)) {
       props.socket.emit('leave', props.user.email, () => { })
     }
-    props.handlecallback(childData)
+    props.handlecallback({ ...childData, message: childData.data.seenMessage ? [...childData.data.seenMessage, ...childData.data.unseenMessage] : null })
   }
   return (
     <div className="main__chatlist">
@@ -89,12 +86,13 @@ const ChatList = (props) => {
               name={item.name}
               key={item._id}
               animationDelay={index + 1}
-              active={item.status == "Online" ? "active" : ""}
-              isOnline={item.status == "Online" ? "active" : ""}
+              active={item.status == "Online" ? "Online" : "Offline"}
+              isOnline={item.status == "Online" ? "Online" : "Offline"}
               image={img}
               email={item.email !== undefined ? item.email : item.room}
               sentTime={item.updatedAt}
               handlecallback={handleCallback}
+              data={item}
             />
           );
         })}

@@ -107,7 +107,7 @@
   display: block;
 }
 .chatlist__item:hover,
-.chatlist__item.active {
+.chatlist__item.Online {
   background: #fff;
 
   border-radius: 10px;
@@ -123,7 +123,7 @@
   border-radius: 50%;
   border: 2px solid #fff;
 }
-.isOnline.active {
+.isOnline.Online {
   background-color: green;
 }
 .avatar-img {
