@@ -78,7 +78,7 @@ const ChatBody = () => {
     setStartChat(true)
   }
   return (
-    <div className="main__chatbody row mt-1">
+    <div className="main__chatbody container-lg row">
       <ChatList handlecallback={handleCallback} newUser={newUser} user={user} socket={socket} userLeft={userLeft} userJoin={userJoin} />
       {startChat ? <ChatContent user={user} message={message} socket={socket} setMessage={setMessage} sendMessage={sendMessage} userLeft={userLeft} userJoin={userJoin} /> : <h1>Admin Messages</h1>}
     </div>
