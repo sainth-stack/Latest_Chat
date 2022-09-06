@@ -6,42 +6,62 @@ import axios from 'axios'
 const url = process.env.REACT_APP_BASE_URL
 const ChatContent = (props) => {
   const messagesEndRef = useRef(null)
+  const messagesStrRef = useRef(null)
   const [message1, setMessage1] = useState('')
   const img = "https://pbs.twimg.com/profile_images/1055263632861343745/vIqzOHXj.jpg"
   const [data, setData] = useState([])
   const [myMessage, setMyMessage] = useState(false)
   const [isOnline2, setIsOnline] = useState(props.user.isOnline)
   const [userIn, setUserIn] = useState(false)
-  const [messageLimit, setMessageLimit] = useState(20)
-  let page=1
+  const [called, setCalled] = useState()
+  const count = useRef(0)
+  let page = 1
+  let pagesize = 20
   const observer = useRef()
   const lastElement = useCallback(node => {
     if (observer.current) observer.current.disconnect()
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        console.log('calling')
-        fetchUserData()
+        if (called !== node && count.current >= 3) {
+          console.log(count)
+          setCalled(node)
+          fetchData()
+        }
       }
     })
     if (node) observer.current.observe(node)
   }, [])
   const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current.scrollIntoView({ behavior: "auto", block: "end", inline: "nearest" })
   }
-  useEffect(() => {
-    scrollToBottom()
-  })
+  const scrollToCenter = () => {
+    messagesStrRef.current.scrollIntoView({block: "start", inline: "start" })
+  }
+  // useEffect(() => {
+  //   scrollToBottom()
+  // })
+  const fetchData = async () => {
+    const finalData = await fetchUserData()
+    setData(prevState => {
+      return [...finalData, ...prevState];
+    });
+    if (finalData.length !== 0) {
+      console.log(lastElement)
+      scrollToCenter()
+    }
+  }
+
   useEffect(() => {
     props.socket.on('message', (message) => {
       const updateData = [...data, { message: message.message, type: myMessage ? '' : 'other', msgid: 'hello', date: message.date, seen: message.seen }]
       setData(updateData)
       setMyMessage(false)
+      scrollToBottom()
       console.log(props.user.email, message.msgid)
       if (props.user.email == message.email) {
         setIsOnline('Online')
         // changeSeen()
       }
-      scrollToBottom()
     })
   }, [data, myMessage])
   const changeSeen = async () => {
@@ -69,40 +89,41 @@ const ChatContent = (props) => {
       changeSeen()
     }
   }, [props.userJoin])
-
-  const fetchUserData = () => {
-    console.log(data)
-    let pagesize=10
-    axios({
+  const fetchUserData = async () => {
+    let cancel;
+    const data = await axios({
       url: `${url}/api/getuserbyid/` + `${props.user.email}` + '/' + `${pagesize}` + `/` + `${page}`,
       method: "GET",
+      cancelToken: new axios.CancelToken(c => cancel = c)
+    })
+    page = page + 1
+    return data.data.data
+
+  }
+  useEffect(() => {
+    let cancel;
+    axios({
+      url: `${url}/api/getuserbyid/` + `${props.user.email}` + '/' + `${pagesize}` + `/` + '0',
+      method: "GET",
+      cancelToken: new axios.CancelToken(c => cancel = c)
     })
       .then((res) => {
-        page=page+1
-        let updateData = [...data,...res.data.data]
-        console.log(updateData)
-        setData(updateData)
+        setData(res.data.data)
         scrollToBottom()
       })
       .catch((err) => {
         console.log('failed', err)
       });
-  }
-  useEffect(() => {
-    fetchUserData()
   }, [props.user])
 
   const sendMessage = (e) => {
     setMyMessage(true)
-    props.sendMessage(e)
     scrollToBottom()
+    props.sendMessage(e)
   }
   const onChangeMessage = (e) => {
     props.setMessage(e.target.value)
     setMessage1(e.target.value)
-  }
-  const myScript = (e) => {
-    console.log(e.target)
   }
   const image = "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU";
   return (
@@ -129,39 +150,40 @@ const ChatContent = (props) => {
         <div className="chat__items">
           {data.map((itm, index) => {
             if (index === 1) {
-                return <div ref={lastElement}>
-                  <ChatItem
-                    animationDelay="1"
-                    key={index}
-                    user={itm.type ? itm.type : "me"}
-                    msg={itm.message}
-                    image={itm.type ? image : image}
-                    isOnline={isOnline2}
-                    name={props.user.name}
-                    email={props.user.email}
-                    date={itm.date !== undefined ? itm.date : itm.createdAt}
-                    seen={itm.seen}
-                    userIn={userIn}
-                  />
-                </div>
-              }
-              else {
-                return <div>
-                  <ChatItem
-                    animationDelay="1"
-                    key={index}
-                    user={itm.type ? itm.type : "me"}
-                    msg={itm.message}
-                    image={itm.type ? image : image}
-                    isOnline={isOnline2}
-                    name={props.user.name}
-                    email={props.user.email}
-                    date={itm.date !== undefined ? itm.date : itm.createdAt}
-                    seen={itm.seen}
-                    userIn={userIn}
-                  />
-                </div>
-              }
+              count.current = count.current + 1;
+              return <div ref={lastElement} >
+                <ChatItem
+                  animationDelay="1"
+                  key={index}
+                  user={itm.type ? itm.type : "me"}
+                  msg={itm.message}
+                  image={itm.type ? image : image}
+                  isOnline={isOnline2}
+                  name={props.user.name}
+                  email={props.user.email}
+                  date={itm.date !== undefined ? itm.date : itm.createdAt}
+                  seen={itm.seen}
+                  userIn={userIn}
+                />
+              </div>
+            }
+            else {
+              return <div ref={messagesStrRef}>
+                <ChatItem
+                  animationDelay="1"
+                  key={index}
+                  user={itm.type ? itm.type : "me"}
+                  msg={itm.message}
+                  image={itm.type ? image : image}
+                  isOnline={isOnline2}
+                  name={props.user.name}
+                  email={props.user.email}
+                  date={itm.date !== undefined ? itm.date : itm.createdAt}
+                  seen={itm.seen}
+                  userIn={userIn}
+                />
+              </div>
+            }
           })}
           <div ref={
             messagesEndRef} />

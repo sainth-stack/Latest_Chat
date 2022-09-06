@@ -82,11 +82,12 @@ router.get('/getusers', async (req, res) => {
 })
 router.get('/getuserbyid/:id/:pagesize/:page', async (req, res) => {
   try {
-    const msgs = await msgModel.find({ msgid: req.params.id }).limit(req.params.pagesize).sort({ createdAt:-1 }).skip(req.params.page * req.params.pagesize);
+    const msgs = await msgModel.find({ msgid: req.params.id }).limit(req.params.pagesize).sort({ createdAt: -1 }).skip(req.params.page * req.params.pagesize);
     res.status(200).send(
       successResponse({
         message: 'msg Retrieved Successfully!',
-        data: msgs
+        data: msgs.reverse()
+
       })
     )
   } catch (err) {

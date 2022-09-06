@@ -22,8 +22,10 @@ const Chat = (props) => {
     useEffect(() => {
         const roomid = JSON.parse(localStorage.getItem('room'))
         if (roomid) {
+            let pagesize=20;
+            let page=0
             axios({
-                url: `${url}/api/getuserbyid/` + `${roomid.room}`,
+                url: `${url}/api/getuserbyid/` + `${roomid.room}` + '/' + `${pagesize}` + `/` + `${page}`,
                 method: "GET",
             })
                 .then((res) => {
