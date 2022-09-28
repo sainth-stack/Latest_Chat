@@ -14,6 +14,8 @@ const ChatBody = () => {
   const [newUser, setNewUser] = useState({})
   const [userLeft, setUserLeft] = useState({})
   const [userJoin, setUserJoin] = useState({})
+  const [file, selectFile1] = useState()
+  const [type,setType] = useState('')
   let name = "admin"
   let room = user.email
   let userType = 'admin'
@@ -57,15 +59,38 @@ const ChatBody = () => {
 
   })
   //sending msg
-  const sendMessage = (event) => {
-    event.preventDefault();
-    if (message) {
+  const sendMessage = async (target, event) => {
+    console.log(type)
+    if (!file) {
+      event.preventDefault();
       var d = new Date();
-      socket.emit('sendMessage', message, name, room, d, false, "me", () => setMessage(''));
+      socket.emit('sendMessage', message, name, room, d, false, "me", () => { setMessage(''); selectFile1('');setType('') });
       axios({
         url: `${url}/api/createmsg`,
         method: "POST",
-        data: {name:name,message:message, msgid:room, type: "", date: d, seen: false,from:"admin@gmail.com",to:room},
+        data: { name: name, message: message, msgid: room, type: "", date: d, seen: false, from: "admin@gmail.com", to: room },
+      })
+        .then((res) => {
+        })
+        .catch((err) => {
+        });
+    }
+    else {
+      var d = new Date();
+      const file = event;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append("upload_preset", "ml_default");
+      const data = await fetch('https://api.cloudinary.com/v1_1/dfkzxvvto/image/upload', {
+        resource_type: 'auto',
+        method: 'POST',
+        body: formData
+      }).then(r => r.json());
+      socket.emit('upload', data.secure_url, name, room, d, false, "me", true,type,() => { setMessage(''); selectFile1('');setType('') });
+      axios({
+        url: `${url}/api/createmsg`,
+        method: "POST",
+        data: { name: name, message: data.secure_url, msgid: room, type: "", date: d, seen: false, from: "admin@gmail.com", to: room, img: true,imgtype:type },
       })
         .then((res) => {
         })
@@ -80,7 +105,7 @@ const ChatBody = () => {
   return (
     <div className="main__chatbody container-lg row">
       <ChatList handlecallback={handleCallback} newUser={newUser} user={user} socket={socket} userLeft={userLeft} userJoin={userJoin} />
-      {startChat ? <ChatContent user={user} message={message} socket={socket} setMessage={setMessage} sendMessage={sendMessage} userLeft={userLeft} userJoin={userJoin} /> : <h1>Admin Messages</h1>}
+      {startChat ? <ChatContent user={user} selectFile1={selectFile1} file={file} message={message} socket={socket} setMessage={setMessage} sendMessage={sendMessage} userLeft={userLeft} userJoin={userJoin} setType={setType}/> : <h1>Admin Messages</h1>}
     </div>
   );
 

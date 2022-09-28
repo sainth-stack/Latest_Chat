@@ -34,6 +34,14 @@ const Schema = new mongoose.Schema({
     enum: [true, false],
     default: false
   },
+  img: {
+    type: Boolean,
+    enum: [true, false],
+    default: false
+  },
+  imgtype: {
+    type: String,
+  },
 
 }, { timestamps: true });
 

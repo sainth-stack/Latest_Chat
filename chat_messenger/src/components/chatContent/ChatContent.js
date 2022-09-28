@@ -3,12 +3,12 @@ import "./chatContent.css";
 import Avatar from "../chatList/Avatar";
 import ChatItem from "./ChatItem";
 import axios from 'axios'
+import { Buffer } from 'buffer';
 const url = process.env.REACT_APP_BASE_URL
 const ChatContent = (props) => {
   const messagesEndRef = useRef(null)
   const messagesStrRef = useRef(null)
   const [message1, setMessage1] = useState('')
-  const img = "https://pbs.twimg.com/profile_images/1055263632861343745/vIqzOHXj.jpg"
   const [data, setData] = useState([])
   const [myMessage, setMyMessage] = useState(false)
   const [isOnline2, setIsOnline] = useState(props.user.isOnline)
@@ -23,7 +23,6 @@ const ChatContent = (props) => {
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
         if (called !== node && count.current >= 3) {
-          console.log(count)
           setCalled(node)
           fetchData()
         }
@@ -32,10 +31,10 @@ const ChatContent = (props) => {
     if (node) observer.current.observe(node)
   }, [])
   const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView({ behavior: "auto", block: "end", inline: "nearest" })
+    messagesEndRef.current.scrollIntoView({ behavior: "auto", block: "end" })
   }
   const scrollToCenter = () => {
-    messagesStrRef.current.scrollIntoView({block: "start", inline: "start" })
+    messagesStrRef.current.scrollIntoView({ behavior: "auto", block: "nearest", inline: 'nearest' })
   }
   // useEffect(() => {
   //   scrollToBottom()
@@ -45,25 +44,36 @@ const ChatContent = (props) => {
     setData(prevState => {
       return [...finalData, ...prevState];
     });
+    // setLen(prevState =>{
+    //   return prevState - finalData.length
+    // })
     if (finalData.length !== 0) {
-      console.log(lastElement)
       scrollToCenter()
     }
   }
-
   useEffect(() => {
     props.socket.on('message', (message) => {
       const updateData = [...data, { message: message.message, type: myMessage ? '' : 'other', msgid: 'hello', date: message.date, seen: message.seen }]
       setData(updateData)
       setMyMessage(false)
       scrollToBottom()
-      console.log(props.user.email, message.msgid)
       if (props.user.email == message.email) {
         setIsOnline('Online')
         // changeSeen()
       }
     })
-  }, [data, myMessage])
+    props.socket.on('file', (message) => {
+      const updateData = [...data, { message: message.message, type: myMessage ? '' : 'other', msgid: 'hello', date: message.date, seen: message.seen, img: true ,imgtype:message.imgtype}]
+      setData(updateData)
+      setMyMessage(false)
+      scrollToBottom()
+      if (props.user.email == message.email) {
+        setIsOnline('Online')
+        // changeSeen()
+      }
+    })
+
+  }, [data, myMessage,props.file])
   const changeSeen = async () => {
     const data1 = data.map((item) => {
       return {
@@ -109,6 +119,7 @@ const ChatContent = (props) => {
     })
       .then((res) => {
         setData(res.data.data)
+        // setLen(res.data.data.length)
         scrollToBottom()
       })
       .catch((err) => {
@@ -117,13 +128,25 @@ const ChatContent = (props) => {
   }, [props.user])
 
   const sendMessage = (e) => {
-    setMyMessage(true)
-    scrollToBottom()
-    props.sendMessage(e)
+    if (props.file) {
+      setMyMessage(true)
+      props.sendMessage('file', props.file)
+      scrollToBottom()
+    }
+    else {
+      setMyMessage(true)
+      props.sendMessage('text', e)
+      scrollToBottom()
+    }
   }
   const onChangeMessage = (e) => {
     props.setMessage(e.target.value)
     setMessage1(e.target.value)
+  }
+  const selectFile = (e) => {
+    props.setMessage(e.target.files[0].name)
+    props.selectFile1(e.target.files[0])
+    props.setType(e.target.files[0].type)
   }
   const image = "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU";
   return (
@@ -149,7 +172,8 @@ const ChatContent = (props) => {
       <div className="content__body">
         <div className="chat__items">
           {data.map((itm, index) => {
-            if (index === 1) {
+            console.log(data)
+            if (index === 4) {
               count.current = count.current + 1;
               return <div ref={lastElement} >
                 <ChatItem
@@ -164,10 +188,12 @@ const ChatContent = (props) => {
                   date={itm.date !== undefined ? itm.date : itm.createdAt}
                   seen={itm.seen}
                   userIn={userIn}
+                  img={itm.img ? itm.img : false}
+                  imgtype={itm.imgtype}
                 />
               </div>
             }
-            else {
+            else if (index === 19) {
               return <div ref={messagesStrRef}>
                 <ChatItem
                   animationDelay="1"
@@ -181,6 +207,27 @@ const ChatContent = (props) => {
                   date={itm.date !== undefined ? itm.date : itm.createdAt}
                   seen={itm.seen}
                   userIn={userIn}
+                  img={itm.img ? itm.img : false}
+                  imgtype={itm.imgtype}
+                />
+              </div>
+            }
+            else {
+              return <div>
+                <ChatItem
+                  animationDelay="1"
+                  key={index}
+                  user={itm.type ? itm.type : "me"}
+                  msg={itm.message}
+                  image={itm.type ? image : image}
+                  isOnline={isOnline2}
+                  name={props.user.name}
+                  email={props.user.email}
+                  date={itm.date !== undefined ? itm.date : itm.createdAt}
+                  seen={itm.seen}
+                  userIn={userIn}
+                  img={itm.img ? itm.img : false}
+                  imgtype={itm.imgtype}
                 />
               </div>
             }
@@ -191,9 +238,10 @@ const ChatContent = (props) => {
       </div>
       <div className="content__footer">
         <div className="sendNewMessage">
-          <button className="addFiles">
+          <label class="addFiles custom-file-upload">
+            <input type="file" onChange={selectFile} className="d-none" />
             <i className="fa fa-plus"></i>
-          </button>
+          </label>
           <input
             type="text"
             placeholder="Type a message here"

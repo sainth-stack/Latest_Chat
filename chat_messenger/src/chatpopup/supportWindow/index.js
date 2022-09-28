@@ -22,7 +22,7 @@ const SupportWindow = (props) => {
     const params = { chatname: data.name, room: data.email };
     const navigate = useNavigate()
     const navigateToChat = async () => {
-        localStorage.setItem('room', JSON.stringify({ name: data.name, room: data.email }))
+        localStorage.setItem('room', JSON.stringify({ name: data.name, room: data.email ,new:true}))
         var d = new Date();
        await axios({
             url: `${url}/api/create`,

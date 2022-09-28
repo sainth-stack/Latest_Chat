@@ -7,8 +7,8 @@ const ChatList = (props) => {
 
   const img = "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTA78Na63ws7B7EAWYgTr9BxhX_Z8oLa1nvOA&usqp=CAU"
   const [users, setUsers] = useState([])
-
-
+  const [value, setValue] = useState('')
+  const [filterData, setFilterData] = useState([])
   useEffect(() => {
     if (!(Object.keys(props.newUser).length === 0)) {
       const finalUsers = users.filter((user) => user.email !== props.newUser.user.room)
@@ -63,6 +63,16 @@ const ChatList = (props) => {
     }
     props.handlecallback({ ...childData, message: childData.data.seenMessage ? [...childData.data.seenMessage, ...childData.data.unseenMessage] : null })
   }
+  const handleChange = (e) => {
+    setValue(e.target.value)
+    const updateData = users.filter((item) => {
+      if (item.name.includes(e.target.value)) {
+        return true
+      }
+    })
+    setFilterData(updateData)
+  }
+
   return (
     <div className="main__chatlist col-sm-3">
       <div className="chatlist__heading">
@@ -73,14 +83,14 @@ const ChatList = (props) => {
       </div>
       <div className="chatList__search">
         <div className="search_wrap">
-          <input type="text" placeholder="Search Here" required />
+          <input type="text" placeholder="Search Here" value={value} onChange={(e) => { handleChange(e) }} />
           <button className="search-btn">
             <i className="fa fa-search"></i>
           </button>
         </div>
       </div>
       <div className="chatlist__items">
-        {users.length < 1 ? <h1>No Users Found</h1> : users.map((item, index) => {
+        {users.length < 1 ? <h1>No Users Found</h1> : (value != '' ? filterData : users).map((item, index) => {
           return (
             <ChatListItems
               name={item.name}

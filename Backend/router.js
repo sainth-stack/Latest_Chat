@@ -100,7 +100,7 @@ router.get('/getuserbyid/:id/:pagesize/:page', async (req, res) => {
 })
 router.post('/createmsg', async (req, res) => {
   try {
-    let requestBody = { message: req.body.message, msgid: req.body.msgid, type: req.body.type, date: req.body.date, seen: req.body.seen, from: req.body.from, to: req.body.to }
+    let requestBody = { message: req.body.message, msgid: req.body.msgid, type: req.body.type, date: req.body.date, seen: req.body.seen, from: req.body.from, to: req.body.to,img:req.body.img ? req.body.img : false,imgtype:req.body.imgtype ? req.body.imgtype : 'text' }
     const newCompany = new msgModel(requestBody);
     await newCompany.save();
     res.status(200).send(
